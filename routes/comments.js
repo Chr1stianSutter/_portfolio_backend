@@ -90,13 +90,64 @@ router.get('/:pid', function(req, res, next) {
 
 //   U - update: comments/:id
 router.put('/:id', function(req, res, next) {
-
+  var commentId = req.params.id.toString();
+    
+  comment.update({
+    name: req.body.name.toString(),
+    email: req.body.email.toString(),
+    comment: req.body.comment.toString()
+  },{
+    where: {
+      id: commentId
+    },
+    limit: 1
+  }).then(result => {
+    res.json({response: result})
+  }).catch(err => {
+    console.error("No comment with id "+commentId+"found\n", err);
+  });
 });
+
 
 //   D - delete: comments/:id
 router.delete('/:id', function(req, res, next) {
-
+  var commentId = req.params.id.toString();
+  comment.findAll({
+      limit: 1,
+      where: {
+        id: commentId
+      }
+    }).then(result => {
+      result[0].destroy()
+    }).catch(err => {
+      console.error("Encountered the following error while trying to delete Project "+commentId+ ":", err,)
+    })
 });
 
+router.post('/:pid', (req, res, next) => {
+  var name = req.body.name.toString();
+  var email = req.body.email.toString();
+  var comment = req.body.comment.toString();
+  var pid = req.body.pid.toString();
+
+  comment.build({
+    name: name,
+    email: email,
+    comment: comment,
+    pid: pid
+
+  }).save().then(entry => {
+    //Created Project
+    console.log("DB response:\n", entry);
+    res.json({response: entry});
+
+  }).catch(err => {
+    //Server Error
+    if(err){
+      console.error("Fehler:\n", err);
+      res.next(new CreateError(500));
+    }
+  });
+});
 
 module.exports = router;
